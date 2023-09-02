@@ -1,5 +1,7 @@
 package conf
 
+import "fmt"
+
 // 全局配置
 var (
 	c *Config
@@ -31,6 +33,7 @@ type MySQL struct {
 	LogDirName    string `toml:"log_dir_name" env:"MYSQL_LOG_DIR_NAME"`
 	TmpDirName    string `toml:"tmp_dir_name" env:"MYSQL_TMP_DIR_NAME"`
 	ConfDirName   string `toml:"conf_dir_name" env:"MYSQL_CONF_DIR_NAME"`
+	BackupDirName string `toml:"backup_dir_name" env:"MYSQL_BACKUP_DIR_NAME"`
 }
 
 // Master结构体
@@ -38,7 +41,7 @@ type Master struct {
 	SysUsername string `toml:"sys_username" env:"MASTER_SYS_USERNAME"`
 	SysPassword string `toml:"sys_password" env:"MASTER_SYS_PASSWORD"`
 	SysHost     string `toml:"sys_host" env:"MASTER_SYS_HOST"`
-	SysPort     string `toml:"sys_port" env:"MASTER_SYS_PORT"`
+	SysPort     int64  `toml:"sys_port" env:"MASTER_SYS_PORT"`
 }
 
 // Slavea结构体
@@ -46,7 +49,7 @@ type Slavea struct {
 	SysUsername string `toml:"sys_username" env:"SLAVEA_SYS_USERNAME"`
 	SysPassword string `toml:"sys_password" env:"SLAVEA_SYS_PASSWORD"`
 	SysHost     string `toml:"sys_host" env:"SLAVEA_SYS_HOST"`
-	SysPort     string `toml:"sys_port" env:"SLAVEA_SYS_PORT"`
+	SysPort     int64  `toml:"sys_port" env:"SLAVEA_SYS_PORT"`
 }
 
 // Slaveb结构体
@@ -54,34 +57,60 @@ type Slaveb struct {
 	SysUsername string `toml:"sys_username" env:"SLAVEB_SYS_USERNAME"`
 	SysPassword string `toml:"sys_password" env:"SLAVEB_SYS_PASSWORD"`
 	SysHost     string `toml:"sys_host" env:"SLAVEB_SYS_HOST"`
-	SysPort     string `toml:"sys_port" env:"SLAVEB_SYS_PORT"`
+	SysPort     int64  `toml:"sys_port" env:"SLAVEB_SYS_PORT"`
 }
 
 // Config构造函数
-func NewConfig() *Config {
+func NewDefaultConfig() *Config {
 	return &Config{
-		MySQL:  NewMySQL(),
-		Slavea: NewSlavea(),
-		Slaveb: NewSlaveb(),
+		MySQL:  NewDefaultMySQL(),
+		Master: NewDefaultMaster(),
+		Slavea: NewDefaultSlavea(),
+		Slaveb: NewDefaultSlaveb(),
 	}
 }
 
 // MySQL结构体构造函数
-func NewMySQL() *MySQL {
+func NewDefaultMySQL() *MySQL {
 	return &MySQL{}
 }
 
 // Master构造函数
-func NewMaster() *Master {
+func NewDefaultMaster() *Master {
 	return &Master{}
 }
 
 // Slavea构造函数
-func NewSlavea() *Slavea {
+func NewDefaultSlavea() *Slavea {
 	return &Slavea{}
 }
 
 // Slaveb构造函数
-func NewSlaveb() *Slaveb {
+func NewDefaultSlaveb() *Slaveb {
 	return &Slaveb{}
+}
+
+// 获取MySQL安装路径
+func (m *MySQL) BinlogPath() string {
+	return fmt.Sprintf("%s/%s", m.BaseDir, m.BinlogDirName)
+}
+
+func (m *MySQL) DataPath() string {
+	return fmt.Sprintf("%s/%s", m.BaseDir, m.DataDirName)
+}
+
+func (m *MySQL) LogPath() string {
+	return fmt.Sprintf("%s/%s", m.BaseDir, m.LogDirName)
+}
+
+func (m *MySQL) TmpPath() string {
+	return fmt.Sprintf("%s/%s", m.BaseDir, m.TmpDirName)
+}
+
+func (m *MySQL) ConfPath() string {
+	return fmt.Sprintf("%s/%s", m.BaseDir, m.ConfDirName)
+}
+
+func (m *MySQL) BackupPath() string {
+	return fmt.Sprintf("%s/%s", m.BaseDir, m.BackupDirName)
 }
