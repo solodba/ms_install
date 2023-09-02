@@ -4,16 +4,16 @@ import (
 	"context"
 
 	"github.com/solodba/mcube/apps"
-	"github.com/solodba/ms_install/apps/mysql"
+	"github.com/solodba/ms_install/apps/slavea"
 	"github.com/solodba/ms_install/test/tools"
 )
 
 var (
-	svc mysql.Service
+	svc slavea.Service
 	ctx = context.Background()
 )
 
 func init() {
 	tools.DevelopmentSet()
-	svc = apps.GetInternalApp(mysql.AppName).(mysql.Service)
+	svc = apps.GetInternalApp(slavea.AppName).(slavea.Service)
 }

@@ -2,7 +2,7 @@ package impl
 
 import (
 	"github.com/solodba/mcube/apps"
-	"github.com/solodba/ms_install/apps/mysql"
+	"github.com/solodba/ms_install/apps/slavea"
 	"github.com/solodba/ms_install/conf"
 )
 
@@ -17,7 +17,7 @@ type impl struct {
 
 // 实现Ioc中心Name方法
 func (i *impl) Name() string {
-	return mysql.AppName
+	return slavea.AppName
 }
 
 // 实现Ioc中心Conf方法

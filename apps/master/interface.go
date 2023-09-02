@@ -1,14 +1,18 @@
-package mysql
+package master
 
 import "context"
 
 // 模块名称
 const (
-	AppName = "mysql"
+	AppName = "master"
 )
 
-// mysql安装服务
+// 主节点安装程序接口
 type Service interface {
+	// 关闭防火墙
+	StopFirewall(context.Context) error
+	// 关闭selinux
+	StopSelinux(context.Context) error
 	// 上传mysql安装文件
 	UploadMysqlInstallFile(context.Context) error
 	// 解压MySQL压缩文件

@@ -2,7 +2,7 @@ package impl
 
 import (
 	"github.com/solodba/mcube/apps"
-	"github.com/solodba/ms_install/apps/syscheck"
+	"github.com/solodba/ms_install/apps/slaveb"
 	"github.com/solodba/ms_install/conf"
 )
 
@@ -17,7 +17,7 @@ type impl struct {
 
 // 实现Ioc中心Name方法
 func (i *impl) Name() string {
-	return syscheck.AppName
+	return slaveb.AppName
 }
 
 // 实现Ioc中心Conf方法
