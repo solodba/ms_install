@@ -36,6 +36,32 @@ func (i *impl) UploadMysqlInstallFile(context.Context) error {
 
 // 解压MySQL压缩文件
 func (i *impl) UnzipMySQLFile(context.Context) error {
+	// master节点
+	// remoteFile := fmt.Sprintf("/tmp/%s", i.c.MySQL.FileName)
+	cmd := fmt.Sprintf(`ls -ld %s`, i.c.MySQL.InstallPath)
+	_, err := i.c.Master.RunShell(cmd)
+	if err == nil {
+		return fmt.Errorf("[%s]主机上[%s]文件夹已经存在,请确定是否安装了MySQL", i.c.Master.SysHost, i.c.MySQL.InstallPath)
+	}
+	// logger.L().Info().Msgf("正在解压MySQL压缩包")
+	// cmd := exec.Command("xz", "-d", i.c.MySQL.FileName)
+	// _, err = cmd.Output()
+	// if err != nil {
+	// 	return fmt.Errorf("解压MySQL压程序失败: %v", err.Error())
+	// }
+	// tarName := strings.TrimRight(i.c.MySQL.FileName, ".xz")
+	// cmd = exec.Command("tar", "xf", tarName)
+	// _, err = cmd.Output()
+	// if err != nil {
+	// 	return fmt.Errorf("解压MySQL压程序失败: %v", err.Error())
+	// }
+	// dirName := strings.TrimRight(tarName, ".tar")
+	// cmd = exec.Command("mv", dirName, i.c.MySQL.InstallPath)
+	// _, err = cmd.Output()
+	// if err != nil {
+	// 	return fmt.Errorf("移动MySQL解压包失败: %v", err.Error())
+	// }
+	// logger.L().Info().Msgf("解压MySQL压缩包成功")
 	return nil
 }
 
