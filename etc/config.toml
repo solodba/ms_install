@@ -12,18 +12,18 @@ root_password = "Root@123"
 
 [master]
 sys_username = "root"
-sys_password = "Root@123"
+sys_password = "Hu_900515"
 sys_host = "192.168.1.140"
 sys_port = 22
 
 [slavea]
 sys_username = "root"
-sys_password = "Root@123"
+sys_password = "Hu_900515"
 sys_host = "192.168.1.150"
 sys_port = 22
 
 [slaveb]
 sys_username = "root"
-sys_password = "Root@123"
+sys_password = "Hu_900515"
 sys_host = "192.168.1.160"
 sys_port = 22
