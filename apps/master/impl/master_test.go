@@ -29,3 +29,10 @@ func TestUnzipMySQLFile(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCreateMySQLDir(t *testing.T) {
+	err := svc.CreateMySQLDir(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

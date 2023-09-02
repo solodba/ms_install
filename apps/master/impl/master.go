@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/solodba/mcube/logger"
 )
@@ -66,11 +67,73 @@ func (i *impl) UnzipMySQLFile(context.Context) error {
 		return fmt.Errorf("[%s]主机上解压文件[%s]失败, 原因: %s", i.c.Master.SysHost, remoteFile, err.Error())
 	}
 	logger.L().Info().Msgf("[%s]主机上解压文件[%s]成功", i.c.Master.SysHost, remoteFile)
+	tarName := strings.TrimRight(i.c.MySQL.FileName, ".xz")
+	cmd = fmt.Sprintf(`/bin/sh -c "tar xf /tmp/%s -C /tmp"`, tarName)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上解压文件[%s]失败, 原因: %s", i.c.Master.SysHost, tarName, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上解压文件[%s]成功", i.c.Master.SysHost, tarName)
+	dirName := strings.TrimRight(tarName, ".tar")
+	cmd = fmt.Sprintf(`/bin/sh -c "mv /tmp/%s %s/"`, dirName, i.c.MySQL.InstallPath)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上mv文件[%s]失败, 原因: %s", i.c.Master.SysHost, dirName, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上mv文件[%s]成功", i.c.Master.SysHost, dirName)
 	return nil
 }
 
 // 创建MySQL相关目录
 func (i *impl) CreateMySQLDir(context.Context) error {
+	cmd := fmt.Sprintf(`/bin/sh -c "ls -ld %s"`, i.c.MySQL.BaseDir)
+	_, err := i.c.Master.RunShell(cmd)
+	time.Sleep(3 * time.Second)
+	if err == nil {
+		return fmt.Errorf("[%s]文件夹[%s]已经存在, 请确定是否安装了MySQL", i.c.Master.SysHost, i.c.MySQL.BaseDir)
+	}
+	// 创建数据目录
+	cmd = fmt.Sprintf(`/bin/sh -c "mkdir -p %s;chmod 755 -R %s"`, i.c.MySQL.DataPath(), i.c.MySQL.DataPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上目录[%s]创建失败, 原因: %s", i.c.Master.SysHost, i.c.MySQL.DataPath(), err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上目录[%s]创建成功", i.c.Master.SysHost, i.c.MySQL.DataPath())
+	// 创建binlog目录
+	cmd = fmt.Sprintf(`/bin/sh -c "mkdir -p %s;chmod 755 -R %s"`, i.c.MySQL.BinlogPath(), i.c.MySQL.BinlogPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上目录[%s]创建失败, 原因: %s", i.c.Master.SysHost, i.c.MySQL.BinlogPath(), err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上目录[%s]创建成功", i.c.Master.SysHost, i.c.MySQL.BinlogPath())
+	// 创建日志目录
+	cmd = fmt.Sprintf(`/bin/sh -c "mkdir -p %s;chmod 755 -R %s"`, i.c.MySQL.LogPath(), i.c.MySQL.LogPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上目录[%s]创建失败, 原因: %s", i.c.Master.SysHost, i.c.MySQL.LogPath(), err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上目录[%s]创建成功", i.c.Master.SysHost, i.c.MySQL.LogPath())
+	// 创建临时文件目录
+	cmd = fmt.Sprintf(`/bin/sh -c "mkdir -p %s;chmod 755 -R %s"`, i.c.MySQL.TmpPath(), i.c.MySQL.TmpPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上目录[%s]创建失败, 原因: %s", i.c.Master.SysHost, i.c.MySQL.TmpPath(), err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上目录[%s]创建成功", i.c.Master.SysHost, i.c.MySQL.TmpPath())
+	// 创建配置文件目录
+	cmd = fmt.Sprintf(`/bin/sh -c "mkdir -p %s;chmod 755 -R %s"`, i.c.MySQL.ConfPath(), i.c.MySQL.ConfPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上目录[%s]创建失败, 原因: %s", i.c.Master.SysHost, i.c.MySQL.ConfPath(), err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上目录[%s]创建成功", i.c.Master.SysHost, i.c.MySQL.ConfPath())
+	// 创建备份文件目录
+	cmd = fmt.Sprintf(`/bin/sh -c "mkdir -p %s;chmod 755 -R %s"`, i.c.MySQL.BackupPath(), i.c.MySQL.BackupPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上目录[%s]创建失败, 原因: %s", i.c.Master.SysHost, i.c.MySQL.BackupPath(), err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上目录[%s]创建成功", i.c.Master.SysHost, i.c.MySQL.BackupPath())
 	return nil
 }
 
