@@ -187,10 +187,9 @@ func (i *impl) ChangeMySQLDirPerm(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
-	cmd = fmt.Sprintf(`/bin/sh -c "cp my.cnf %s/"`, i.c.MySQL.ConfPath())
-	_, err = i.c.Master.RunShell(cmd)
+	_, err = i.c.Master.UploadFile("my.cnf", fmt.Sprintf("%s/my.cnf", i.c.MySQL.ConfPath()))
 	if err != nil {
-		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+		return err
 	}
 	return nil
 }
@@ -225,10 +224,9 @@ func (i *impl) StartMySQL(ctx context.Context) error {
 	}
 	pwdList := strings.Split(string(res), " ")
 	pwd := strings.TrimRight(pwdList[len(pwdList)-1], "\n")
-	cmd = fmt.Sprintf(`cp mysql.server /etc/init.d/ -rf`)
-	_, err = i.c.Master.RunShell(cmd)
+	_, err = i.c.Master.UploadFile("mysql.server", "/etc/init.d/mysql.server")
 	if err != nil {
-		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+		return err
 	}
 	cmd = fmt.Sprintf(`chmod 700 /etc/init.d/mysql.server`)
 	_, err = i.c.Master.RunShell(cmd)
