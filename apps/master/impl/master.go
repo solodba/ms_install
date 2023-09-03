@@ -194,6 +194,21 @@ func (i *impl) ChangeMySQLDirPerm(context.Context) error {
 
 // MySQL初始化
 func (i *impl) InitialMySQL(context.Context) error {
+	cmd := fmt.Sprintf(`/bin/sh -c "%s/bin/mysqld --defaults-file=%s/my.cnf --user=mysql --initialize"`,
+		i.c.MySQL.InstallPath, i.c.MySQL.ConfPath())
+	_, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行初始化mysql的命令[%s]失败, 原因: %s", cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`/bin/sh -c "cat /data/mysql/log/mysql.err |grep -i "root@localhost:"|wc -l"`)
+	res, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行检查mysql错误日志命令[%s]失败, 原因: %s", cmd, err.Error())
+	}
+	if strings.Trim(string(res), "\n") != "1" {
+		return fmt.Errorf("MySQL初始化失败")
+	}
+	logger.L().Info().Msgf("MySQL初始化成功")
 	return nil
 }
 

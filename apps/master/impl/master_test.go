@@ -57,3 +57,10 @@ func TestChangeMySQLDirPerm(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestInitialMySQL(t *testing.T) {
+	err := svc.InitialMySQL(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
