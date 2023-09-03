@@ -64,3 +64,10 @@ func TestInitialMySQL(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestAddEnv(t *testing.T) {
+	err := svc.AddEnv(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

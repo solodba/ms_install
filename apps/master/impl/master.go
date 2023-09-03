@@ -146,6 +146,7 @@ func (i *impl) IsMySQLRun(ctx context.Context) error {
 	if strings.Trim(res, "\n") != "0" {
 		return fmt.Errorf("有MySQL进程在运行, 请检查")
 	}
+	logger.L().Info().Msgf("当前没有MySQL进程运行")
 	return nil
 }
 
@@ -168,6 +169,8 @@ func (i *impl) CreateMySQLUser(context.Context) error {
 			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
 		}
 		logger.L().Info().Msgf("添加mysql用户成功")
+	} else {
+		logger.L().Info().Msgf("mysql用户已经添加")
 	}
 	return nil
 }
@@ -198,17 +201,18 @@ func (i *impl) InitialMySQL(context.Context) error {
 		i.c.MySQL.InstallPath, i.c.MySQL.ConfPath())
 	_, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行初始化mysql的命令[%s]失败, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
 	}
 	cmd = fmt.Sprintf(`/bin/sh -c "cat /data/mysql/log/mysql.err |grep -i "root@localhost:"|wc -l"`)
 	res, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行检查mysql错误日志命令[%s]失败, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
 	}
 	if strings.Trim(string(res), "\n") != "1" {
 		return fmt.Errorf("MySQL初始化失败")
+	} else {
+		logger.L().Info().Msgf("MySQL初始化成功")
 	}
-	logger.L().Info().Msgf("MySQL初始化成功")
 	return nil
 }
 
@@ -219,5 +223,25 @@ func (i *impl) StartMySQL(context.Context) error {
 
 // 增加环境量变量
 func (i *impl) AddEnv(context.Context) error {
+	cmd := fmt.Sprintf(`grep 'export PATH=$PATH:%s/bin' /etc/profile|wc -l`, i.c.MySQL.InstallPath)
+	res, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	if strings.Trim(string(res), "\n") == "0" {
+		cmd = fmt.Sprintf(`echo "export PATH=\$PATH:%s/bin" >> /etc/profile`, i.c.MySQL.InstallPath)
+		_, err = i.c.Master.RunShell(cmd)
+		if err != nil {
+			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		}
+		cmd = `source /etc/profile`
+		_, err = i.c.Master.RunShell(cmd)
+		if err != nil {
+			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		}
+		logger.L().Info().Msgf("mysql环境变量添加成功")
+	} else {
+		logger.L().Info().Msgf("mysql环境变量已经添加")
+	}
 	return nil
 }
