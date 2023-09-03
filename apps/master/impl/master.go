@@ -151,7 +151,7 @@ func (i *impl) IsMySQLRun(ctx context.Context) error {
 }
 
 // 创建MySQL用户
-func (i *impl) CreateMySQLUser(context.Context) error {
+func (i *impl) CreateMySQLUser(ctx context.Context) error {
 	cmd := fmt.Sprintf(`/bin/sh -c "cat /etc/passwd |grep -w mysql|wc -l"`)
 	res, err := i.c.Master.RunShell(cmd)
 	if err != nil {
@@ -176,7 +176,7 @@ func (i *impl) CreateMySQLUser(context.Context) error {
 }
 
 // 修改权限
-func (i *impl) ChangeMySQLDirPerm(context.Context) error {
+func (i *impl) ChangeMySQLDirPerm(ctx context.Context) error {
 	cmd := fmt.Sprintf(`/bin/sh -c "chown -R mysql:mysql %s"`, i.c.MySQL.BaseDir)
 	_, err := i.c.Master.RunShell(cmd)
 	if err != nil {
@@ -196,7 +196,7 @@ func (i *impl) ChangeMySQLDirPerm(context.Context) error {
 }
 
 // MySQL初始化
-func (i *impl) InitialMySQL(context.Context) error {
+func (i *impl) InitialMySQL(ctx context.Context) error {
 	cmd := fmt.Sprintf(`/bin/sh -c "%s/bin/mysqld --defaults-file=%s/my.cnf --user=mysql --initialize"`,
 		i.c.MySQL.InstallPath, i.c.MySQL.ConfPath())
 	_, err := i.c.Master.RunShell(cmd)
@@ -217,7 +217,40 @@ func (i *impl) InitialMySQL(context.Context) error {
 }
 
 // 启动MySQL
-func (i *impl) StartMySQL(context.Context) error {
+func (i *impl) StartMySQL(ctx context.Context) error {
+	cmd := fmt.Sprintf(`cat %s/mysql.err | grep 'temporary password'`, i.c.MySQL.LogPath())
+	res, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	pwdList := strings.Split(string(res), " ")
+	pwd := strings.TrimRight(pwdList[len(pwdList)-1], "\n")
+	cmd = fmt.Sprintf(`cp mysql.server /etc/init.d/ -rf`)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`chmod 700 /etc/init.d/mysql.server`)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	err = i.AddEnv(ctx)
+	if err != nil {
+		return err
+	}
+	cmd = fmt.Sprintf(`/bin/sh -c "/etc/init.d/mysql.server start > /dev/null 2>&1"`)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`source /etc/profile;mysql -uroot -p'%s' --connect-expired-password -e "alter user user() identified by '%s';"`, pwd, i.c.MySQL.RootPassword)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	logger.L().Info().Msgf("MySQL 8.0.25 启动完成")
+	logger.L().Info().Msgf("MySQL 8.0.25 安装完成")
 	return nil
 }
 
