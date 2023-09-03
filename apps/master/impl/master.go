@@ -14,9 +14,9 @@ func (i *impl) StopFirewall(ctx context.Context) error {
 	cmd := `/bin/bash -c "systemctl stop firewalld;systemctl disable firewalld;systemctl mask firewalld"`
 	_, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("主机[%s]防火墙关闭失败, 原因: %s", i.c.Master.SysHost, err.Error())
+		return fmt.Errorf("[%s]主机上防火墙关闭失败, 原因: %s", i.c.Master.SysHost, err.Error())
 	}
-	logger.L().Info().Msgf("主机[%s]防火墙关闭成功", i.c.Master.SysHost)
+	logger.L().Info().Msgf("[%s]主机上防火墙关闭成功", i.c.Master.SysHost)
 	return nil
 }
 
@@ -30,11 +30,11 @@ func (i *impl) StopSelinux(ctx context.Context) error {
 	if strings.TrimRight(masterFlag, "\n") != "Disabled" {
 		_, err := i.c.Master.RunShell(cmd)
 		if err != nil {
-			return fmt.Errorf("主机[%s]selinux关闭失败, 原因: %s", i.c.Master.SysHost, err.Error())
+			return fmt.Errorf("[%s]主机上selinux关闭失败, 原因: %s", i.c.Master.SysHost, err.Error())
 		}
-		logger.L().Info().Msgf("主机[%s]Selinux关闭成功", i.c.Master.SysHost)
+		logger.L().Info().Msgf("[%s]主机上Selinux关闭成功", i.c.Master.SysHost)
 	} else {
-		logger.L().Info().Msgf("主机[%s]Selinux已经关闭", i.c.Master.SysHost)
+		logger.L().Info().Msgf("[%s]主机上Selinux已经关闭", i.c.Master.SysHost)
 	}
 	return nil
 }
@@ -141,12 +141,12 @@ func (i *impl) IsMySQLRun(ctx context.Context) error {
 	cmd := fmt.Sprintf(`/bin/sh -c "ps -ef | grep mysqld | grep -v grep | wc -l"`)
 	res, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	if strings.Trim(res, "\n") != "0" {
-		return fmt.Errorf("有MySQL进程在运行, 请检查")
+		return fmt.Errorf("[%s]主机上有MySQL进程在运行, 请检查", i.c.Master.SysHost)
 	}
-	logger.L().Info().Msgf("当前没有MySQL进程运行")
+	logger.L().Info().Msgf("[%s]主机上没有MySQL进程运行", i.c.Master.SysHost)
 	return nil
 }
 
@@ -155,22 +155,22 @@ func (i *impl) CreateMySQLUser(ctx context.Context) error {
 	cmd := fmt.Sprintf(`/bin/sh -c "cat /etc/passwd |grep -w mysql|wc -l"`)
 	res, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	if strings.Trim(res, "\n") != "1" {
 		cmd = fmt.Sprintf(`/bin/sh -c "groupadd mysql"`)
 		_, err = i.c.Master.RunShell(cmd)
 		if err != nil {
-			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+			return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 		}
 		cmd = fmt.Sprintf(`/bin/sh -c "useradd -g mysql mysql"`)
 		_, err = i.c.Master.RunShell(cmd)
 		if err != nil {
-			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+			return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 		}
-		logger.L().Info().Msgf("添加mysql用户成功")
+		logger.L().Info().Msgf("[%s]主机上添加mysql用户成功", i.c.Master.SysHost)
 	} else {
-		logger.L().Info().Msgf("mysql用户已经添加")
+		logger.L().Info().Msgf("[%s]主机上mysql用户已经添加", i.c.Master.SysHost)
 	}
 	return nil
 }
@@ -180,17 +180,17 @@ func (i *impl) ChangeMySQLDirPerm(ctx context.Context) error {
 	cmd := fmt.Sprintf(`/bin/sh -c "chown -R mysql:mysql %s"`, i.c.MySQL.BaseDir)
 	_, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	cmd = fmt.Sprintf(`/bin/sh -c "chown -R mysql:mysql %s"`, i.c.MySQL.InstallPath)
 	_, err = i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	cmd = fmt.Sprintf(`/bin/sh -c "cp my.cnf %s/"`, i.c.MySQL.ConfPath())
 	_, err = i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	return nil
 }
@@ -201,17 +201,17 @@ func (i *impl) InitialMySQL(ctx context.Context) error {
 		i.c.MySQL.InstallPath, i.c.MySQL.ConfPath())
 	_, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	cmd = fmt.Sprintf(`/bin/sh -c "cat /data/mysql/log/mysql.err |grep -i "root@localhost:"|wc -l"`)
 	res, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	if strings.Trim(string(res), "\n") != "1" {
-		return fmt.Errorf("MySQL初始化失败")
+		return fmt.Errorf("[%s]主机上MySQL初始化失败", i.c.Master.SysHost)
 	} else {
-		logger.L().Info().Msgf("MySQL初始化成功")
+		logger.L().Info().Msgf("[%s]主机上MySQL初始化成功", i.c.Master.SysHost)
 	}
 	return nil
 }
@@ -221,19 +221,19 @@ func (i *impl) StartMySQL(ctx context.Context) error {
 	cmd := fmt.Sprintf(`cat %s/mysql.err | grep 'temporary password'`, i.c.MySQL.LogPath())
 	res, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	pwdList := strings.Split(string(res), " ")
 	pwd := strings.TrimRight(pwdList[len(pwdList)-1], "\n")
 	cmd = fmt.Sprintf(`cp mysql.server /etc/init.d/ -rf`)
 	_, err = i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	cmd = fmt.Sprintf(`chmod 700 /etc/init.d/mysql.server`)
 	_, err = i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	err = i.AddEnv(ctx)
 	if err != nil {
@@ -242,15 +242,15 @@ func (i *impl) StartMySQL(ctx context.Context) error {
 	cmd = fmt.Sprintf(`/bin/sh -c "/etc/init.d/mysql.server start > /dev/null 2>&1"`)
 	_, err = i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	cmd = fmt.Sprintf(`source /etc/profile;mysql -uroot -p'%s' --connect-expired-password -e "alter user user() identified by '%s';"`, pwd, i.c.MySQL.RootPassword)
 	_, err = i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
-	logger.L().Info().Msgf("MySQL 8.0.25 启动完成")
-	logger.L().Info().Msgf("MySQL 8.0.25 安装完成")
+	logger.L().Info().Msgf("[%s]主机上MySQL 8.0.25 启动完成", i.c.Master.SysHost)
+	logger.L().Info().Msgf("[%s]主机上MySQL 8.0.25 安装完成", i.c.Master.SysHost)
 	return nil
 }
 
@@ -259,22 +259,22 @@ func (i *impl) AddEnv(context.Context) error {
 	cmd := fmt.Sprintf(`grep 'export PATH=$PATH:%s/bin' /etc/profile|wc -l`, i.c.MySQL.InstallPath)
 	res, err := i.c.Master.RunShell(cmd)
 	if err != nil {
-		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 	}
 	if strings.Trim(string(res), "\n") == "0" {
 		cmd = fmt.Sprintf(`echo "export PATH=\$PATH:%s/bin" >> /etc/profile`, i.c.MySQL.InstallPath)
 		_, err = i.c.Master.RunShell(cmd)
 		if err != nil {
-			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+			return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 		}
 		cmd = `source /etc/profile`
 		_, err = i.c.Master.RunShell(cmd)
 		if err != nil {
-			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+			return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
 		}
-		logger.L().Info().Msgf("mysql环境变量添加成功")
+		logger.L().Info().Msgf("[%s]主机上mysql环境变量添加成功", i.c.Master.SysHost)
 	} else {
-		logger.L().Info().Msgf("mysql环境变量已经添加")
+		logger.L().Info().Msgf("[%s]主机上mysql环境变量已经添加", i.c.Master.SysHost)
 	}
 	return nil
 }
