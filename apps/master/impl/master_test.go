@@ -36,3 +36,24 @@ func TestCreateMySQLDir(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestIsMySQLRun(t *testing.T) {
+	err := svc.IsMySQLRun(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCreateMySQLUser(t *testing.T) {
+	err := svc.CreateMySQLUser(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestChangeMySQLDirPerm(t *testing.T) {
+	err := svc.ChangeMySQLDirPerm(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -137,17 +137,58 @@ func (i *impl) CreateMySQLDir(ctx context.Context) error {
 }
 
 // 判断是否有MySQL进程
-func (i *impl) IsMySQLRun(context.Context) error {
+func (i *impl) IsMySQLRun(ctx context.Context) error {
+	cmd := fmt.Sprintf(`/bin/sh -c "ps -ef | grep mysqld | grep -v grep | wc -l"`)
+	res, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	if strings.Trim(res, "\n") != "0" {
+		return fmt.Errorf("有MySQL进程在运行, 请检查")
+	}
 	return nil
 }
 
 // 创建MySQL用户
 func (i *impl) CreateMySQLUser(context.Context) error {
+	cmd := fmt.Sprintf(`/bin/sh -c "cat /etc/passwd |grep -w mysql|wc -l"`)
+	res, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	if strings.Trim(res, "\n") != "1" {
+		cmd = fmt.Sprintf(`/bin/sh -c "groupadd mysql"`)
+		_, err = i.c.Master.RunShell(cmd)
+		if err != nil {
+			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		}
+		cmd = fmt.Sprintf(`/bin/sh -c "useradd -g mysql mysql"`)
+		_, err = i.c.Master.RunShell(cmd)
+		if err != nil {
+			return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+		}
+		logger.L().Info().Msgf("添加mysql用户成功")
+	}
 	return nil
 }
 
 // 修改权限
 func (i *impl) ChangeMySQLDirPerm(context.Context) error {
+	cmd := fmt.Sprintf(`/bin/sh -c "chown -R mysql:mysql %s"`, i.c.MySQL.BaseDir)
+	_, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`/bin/sh -c "chown -R mysql:mysql %s"`, i.c.MySQL.InstallPath)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`/bin/sh -c "cp my.cnf %s/"`, i.c.MySQL.ConfPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("执行命令[%s]报错, 原因: %s", cmd, err.Error())
+	}
 	return nil
 }
 
