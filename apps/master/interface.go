@@ -33,8 +33,12 @@ type Service interface {
 	AddEnv(context.Context) error
 	// 关闭GTID
 	CloseGtid(context.Context) error
+	// 创建复制用户
+	CreateReplicateUser(context.Context) error
 	// 数据导出
 	MySqlDataDump(context.Context) error
 	// 数据拷贝到从库
-	CopyDumpDataToSlave(context.Context) error
+	CopyDumpDataToSlavea(context.Context) error
+	// 数据拷贝到从库
+	CopyDumpDataToSlaveb(context.Context) error
 }

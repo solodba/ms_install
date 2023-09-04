@@ -85,3 +85,17 @@ func TestStopGtid(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCreateReplicateUser(t *testing.T) {
+	err := svc.CreateReplicateUser(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestMySqlDataDump(t *testing.T) {
+	err := svc.MySqlDataDump(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -259,7 +259,7 @@ func (i *impl) StartMySQL(ctx context.Context) error {
 }
 
 // 增加环境量变量
-func (i *impl) AddEnv(context.Context) error {
+func (i *impl) AddEnv(ctx context.Context) error {
 	cmd := fmt.Sprintf(`grep 'export PATH=$PATH:%s/bin' /etc/profile|wc -l`, i.c.MySQL.InstallPath)
 	res, err := i.c.Master.RunShell(cmd)
 	if err != nil {
@@ -284,7 +284,7 @@ func (i *impl) AddEnv(context.Context) error {
 }
 
 // 关闭GTID
-func (i *impl) CloseGtid(context.Context) error {
+func (i *impl) CloseGtid(ctx context.Context) error {
 	cmd := fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e 'set global gtid_mode=on_permissive;set global gtid_mode=off_permissive;set global gtid_mode=off'`, i.c.MySQL.RootPassword)
 	_, err := i.c.Master.RunShell(cmd)
 	if err != nil {
@@ -309,12 +309,48 @@ func (i *impl) CloseGtid(context.Context) error {
 	return nil
 }
 
-// 数据导出
-func (i *impl) MySqlDataDump(context.Context) error {
+// 创建复制用户
+func (i *impl) CreateReplicateUser(ctx context.Context) error {
+	cmd := fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e "create user '%s'@'%%' identified with mysql_native_password by '%s'"`,
+		i.c.MySQL.RootPassword, i.c.MySQL.ReplUser, i.c.MySQL.ReplPassword)
+	_, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e "grant replication slave on *.* to '%s'@'%%'"`,
+		i.c.MySQL.RootPassword, i.c.MySQL.ReplUser)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上mysql复制用户[%s]创建成功", i.c.Master.SysHost, i.c.MySQL.ReplUser)
 	return nil
 }
 
-// 数据拷贝到从库
-func (i *impl) CopyDumpDataToSlave(context.Context) error {
+// 数据导出
+func (i *impl) MySqlDataDump(ctx context.Context) error {
+	cmd := fmt.Sprintf(`source /etc/profile;mysqldump -u'root' -p'%s' --set-gtid-purged=off --single-transaction --master-data=2 --all-databases > %s/alldb.sql`,
+		i.c.MySQL.RootPassword, i.c.MySQL.BackupPath())
+	_, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`ls -l %s/alldb.sql`, i.c.MySQL.BackupPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上主库全库导出数据成功", i.c.Master.SysHost)
+	return nil
+}
+
+// 数据拷贝到从库a
+func (i *impl) CopyDumpDataToSlavea(ctx context.Context) error {
+	// cmd := fmt.Sprintf(`scp %/alldb.sql `)
+	return nil
+}
+
+// 数据拷贝到从库b
+func (i *impl) CopyDumpDataToSlaveb(ctx context.Context) error {
 	return nil
 }

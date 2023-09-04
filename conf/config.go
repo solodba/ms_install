@@ -35,6 +35,8 @@ type MySQL struct {
 	ConfDirName   string `toml:"conf_dir_name" env:"MYSQL_CONF_DIR_NAME"`
 	BackupDirName string `toml:"backup_dir_name" env:"MYSQL_BACKUP_DIR_NAME"`
 	RootPassword  string `toml:"root_password" env:"MYSQL_ROOT_PASSWORD"`
+	ReplUser      string `toml:"repl_user" env:"MYSQL_REPL_USER"`
+	ReplPassword  string `toml:"repl_password" env:"MYSQL_REPL_PASSWORD"`
 }
 
 // Master结构体
