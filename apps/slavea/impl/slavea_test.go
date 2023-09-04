@@ -29,3 +29,32 @@ func TestUnzipMySQLFile(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCloseGtid(t *testing.T) {
+	err := svc.CloseGtid(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestImportFullData(t *testing.T) {
+	err := svc.ImportFullData(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetBinLogFileNameAndPos(t *testing.T) {
+	binLogNameAndPos, err := svc.GetBinLogFileNameAndPos(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(binLogNameAndPos)
+}
+
+func TestSyncMasterData(t *testing.T) {
+	err := svc.SyncMasterData(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -79,7 +79,7 @@ func TestStartMySQL(t *testing.T) {
 	}
 }
 
-func TestStopGtid(t *testing.T) {
+func TestCloseGtid(t *testing.T) {
 	err := svc.CloseGtid(ctx)
 	if err != nil {
 		t.Fatal(err)

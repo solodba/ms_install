@@ -3,10 +3,12 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/solodba/mcube/logger"
+	"github.com/solodba/ms_install/apps/slavea"
 )
 
 // 关闭防火墙
@@ -259,7 +261,7 @@ func (i *impl) StartMySQL(ctx context.Context) error {
 }
 
 // 增加环境量变量
-func (i *impl) AddEnv(context.Context) error {
+func (i *impl) AddEnv(ctx context.Context) error {
 	cmd := fmt.Sprintf(`grep 'export PATH=$PATH:%s/bin' /etc/profile|wc -l`, i.c.MySQL.InstallPath)
 	res, err := i.c.Slavea.RunShell(cmd)
 	if err != nil {
@@ -280,5 +282,84 @@ func (i *impl) AddEnv(context.Context) error {
 	} else {
 		logger.L().Info().Msgf("[%s]主机上mysql环境变量已经添加", i.c.Slavea.SysHost)
 	}
+	return nil
+}
+
+// 关闭GTID
+func (i *impl) CloseGtid(ctx context.Context) error {
+	cmd := fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e 'set global gtid_mode=on_permissive;set global gtid_mode=off_permissive;set global gtid_mode=off'`, i.c.MySQL.RootPassword)
+	_, err := i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e 'set global enforce_gtid_consistency=off'`, i.c.MySQL.RootPassword)
+	_, err = i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`sed -i 's/gtid_mode=on/gtid_mode=off/' %s/my.cnf`, i.c.MySQL.ConfPath())
+	_, err = i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`sed -i 's/enforce_gtid_consistency=on/enforce_gtid_consistency=off/' %s/my.cnf`, i.c.MySQL.ConfPath())
+	_, err = i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上关闭GTID成功!", i.c.Slavea.SysHost)
+	return nil
+}
+
+// 全库数据导入
+func (i *impl) ImportFullData(ctx context.Context) error {
+	cmd := fmt.Sprintf(`ls -l %s/alldb.sql`, i.c.MySQL.BackupPath())
+	_, err := i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' < %s/alldb.sql`, i.c.MySQL.RootPassword, i.c.MySQL.BackupPath())
+	_, err = i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上全库数据导入成功!", i.c.Slavea.SysHost)
+	return nil
+}
+
+// 获取binlogfile和position
+func (i *impl) GetBinLogFileNameAndPos(ctx context.Context) (*slavea.BinLogFileNamePos, error) {
+	cmd := fmt.Sprintf(`grep '^-- CHANGE MASTER TO*' %s/alldb.sql`, i.c.MySQL.BackupPath())
+	res, err := i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	resList := strings.Split(res, " ")
+	binLogFileNameList := strings.Split(resList[4], "=")
+	binLogFileName := strings.TrimRight(binLogFileNameList[len(binLogFileNameList)-1], "',")
+	binLogFileName = strings.TrimLeft(binLogFileName, "'")
+	binLogPosList := strings.Split(resList[len(resList)-1], "=")
+	binLogPosStr := strings.TrimRight(binLogPosList[len(binLogPosList)-1], ";\n")
+	binLogPos, err := strconv.Atoi(binLogPosStr)
+	if err != nil {
+		return nil, fmt.Errorf("[%s]主机上找到同步Position位点报错, 原因: %s", i.c.Slavea.SysHost, err.Error())
+	}
+	binLogFileNamePos := slavea.NewBinLogFileNamePos(binLogFileName, int64(binLogPos))
+	return binLogFileNamePos, nil
+}
+
+// 从库配置同步
+func (i *impl) SyncMasterData(ctx context.Context) error {
+	binLogFileNamePos, err := i.GetBinLogFileNameAndPos(ctx)
+	if err != nil {
+		return err
+	}
+	cmd := fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e "change master to master_user='%s',master_host='%s',master_password='%s',master_log_file='%s',master_log_pos=%d;start slave"`,
+		i.c.MySQL.RootPassword, i.c.MySQL.ReplUser, i.c.Master.SysHost, i.c.MySQL.ReplPassword, binLogFileNamePos.Name, binLogFileNamePos.Pos)
+	_, err = i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上同步主库[%s]数据命令执行成功", i.c.Slavea.SysHost, i.c.Master.SysHost)
 	return nil
 }
