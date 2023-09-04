@@ -105,8 +105,26 @@ func (m *MsInstallSvc) MsInstall(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+	case "mso":
+		// 主节点主从配置
+		err := m.MsMasterInstall()
+		if err != nil {
+			return err
+		}
+	case "saso":
+		// slavea节点主从配置
+		err := m.MsSlaveaInstall()
+		if err != nil {
+			return err
+		}
+	case "sbso":
+		// slaveb节点主从配置
+		err := m.MsSlavebInstall()
+		if err != nil {
+			return err
+		}
 	default:
-		return fmt.Errorf("该安装类型不支持! 目前支持类型: mo(只安装master节点), sao(只安装slavea节点), sbo(只安装slaveb节点), ms(安装一主一从), mss(安装一主两从)")
+		return fmt.Errorf("该安装类型不支持! 目前支持类型: mo(只安装master节点), sao(只安装slavea节点), sbo(只安装slaveb节点), mso(主节点配置主从), saso(从节点slavea配置主从), sbso(从节点slaveb配置主从), ms(安装一主一从), mss(安装一主两从)")
 	}
 	return nil
 }
