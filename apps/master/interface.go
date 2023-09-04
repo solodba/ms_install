@@ -31,4 +31,10 @@ type Service interface {
 	StartMySQL(context.Context) error
 	// 增加环境量变量
 	AddEnv(context.Context) error
+	// 关闭GTID
+	CloseGtid(context.Context) error
+	// 数据导出
+	MySqlDataDump(context.Context) error
+	// 数据拷贝到从库
+	CopyDumpDataToSlave(context.Context) error
 }

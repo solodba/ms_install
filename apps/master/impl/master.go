@@ -282,3 +282,39 @@ func (i *impl) AddEnv(context.Context) error {
 	}
 	return nil
 }
+
+// 关闭GTID
+func (i *impl) CloseGtid(context.Context) error {
+	cmd := fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e 'set global gtid_mode=on_permissive;set global gtid_mode=off_permissive;set global gtid_mode=off'`, i.c.MySQL.RootPassword)
+	_, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e 'set global enforce_gtid_consistency=off'`, i.c.MySQL.RootPassword)
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`sed -i 's/gtid_mode=on/gtid_mode=off/' %s/my.cnf`, i.c.MySQL.ConfPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`sed -i 's/enforce_gtid_consistency=on/enforce_gtid_consistency=off/' %s/my.cnf`, i.c.MySQL.ConfPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上关闭GTID成功!", i.c.Master.SysHost)
+	return nil
+}
+
+// 数据导出
+func (i *impl) MySqlDataDump(context.Context) error {
+	return nil
+}
+
+// 数据拷贝到从库
+func (i *impl) CopyDumpDataToSlave(context.Context) error {
+	return nil
+}
