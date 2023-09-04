@@ -1,6 +1,10 @@
 package slaveb
 
-import "context"
+import (
+	"context"
+
+	"github.com/solodba/ms_install/apps/slavea"
+)
 
 // 模块名称
 const (
@@ -31,4 +35,12 @@ type Service interface {
 	StartMySQL(context.Context) error
 	// 增加环境量变量
 	AddEnv(context.Context) error
+	// 关闭GTID
+	CloseGtid(context.Context) error
+	// 全库数据导入
+	ImportFullData(context.Context) error
+	// 获取binlogfile和position
+	GetBinLogFileNameAndPos(context.Context) (*slavea.BinLogFileNamePos, error)
+	// 从库配置同步
+	SyncMasterData(context.Context) error
 }
