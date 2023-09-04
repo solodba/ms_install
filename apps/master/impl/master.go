@@ -328,7 +328,7 @@ func (i *impl) CreateReplicateUser(ctx context.Context) error {
 }
 
 // 数据导出
-func (i *impl) MySqlDataDump(ctx context.Context) error {
+func (i *impl) MySqlPosDataDump(ctx context.Context) error {
 	cmd := fmt.Sprintf(`source /etc/profile;mysqldump -u'root' -p'%s' --set-gtid-purged=off --single-transaction --master-data=2 --all-databases > %s/alldb.sql`,
 		i.c.MySQL.RootPassword, i.c.MySQL.BackupPath())
 	_, err := i.c.Master.RunShell(cmd)
@@ -344,13 +344,32 @@ func (i *impl) MySqlDataDump(ctx context.Context) error {
 	return nil
 }
 
+// 下载全库导出文件
+func (i *impl) DownLoadPosDataFile(ctx context.Context) error {
+	downloadMsg, err := i.c.Master.DownloadFile(fmt.Sprintf(`%s/alldb.sql`, i.c.MySQL.BackupPath()), "alldb.sql")
+	if err != nil {
+		return err
+	}
+	logger.L().Info().Msgf("[%s]%s", i.c.Master.SysHost, downloadMsg)
+	return nil
+}
+
 // 数据拷贝到从库a
 func (i *impl) CopyDumpDataToSlavea(ctx context.Context) error {
-	// cmd := fmt.Sprintf(`scp %/alldb.sql `)
+	uploadMsg, err := i.c.Slavea.UploadFile("alldb.sql", fmt.Sprintf(`%s/alldb.sql`, i.c.MySQL.BackupPath()))
+	if err != nil {
+		return err
+	}
+	logger.L().Info().Msgf("[%s]%s", i.c.Slavea.SysHost, uploadMsg)
 	return nil
 }
 
 // 数据拷贝到从库b
 func (i *impl) CopyDumpDataToSlaveb(ctx context.Context) error {
+	uploadMsg, err := i.c.Slaveb.UploadFile("alldb.sql", fmt.Sprintf(`%s/alldb.sql`, i.c.MySQL.BackupPath()))
+	if err != nil {
+		return err
+	}
+	logger.L().Info().Msgf("[%s]%s", i.c.Slaveb.SysHost, uploadMsg)
 	return nil
 }

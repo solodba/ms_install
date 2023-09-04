@@ -20,3 +20,4 @@ index.html
 etc/ssl
 dist/*
 mysql-8.0.25-linux-glibc2.12-x86_64.tar.xz
+alldb.sql

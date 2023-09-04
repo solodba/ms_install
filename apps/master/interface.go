@@ -36,7 +36,9 @@ type Service interface {
 	// 创建复制用户
 	CreateReplicateUser(context.Context) error
 	// 数据导出
-	MySqlDataDump(context.Context) error
+	MySqlPosDataDump(context.Context) error
+	// 下载全库导出文件
+	DownLoadPosDataFile(context.Context) error
 	// 数据拷贝到从库
 	CopyDumpDataToSlavea(context.Context) error
 	// 数据拷贝到从库

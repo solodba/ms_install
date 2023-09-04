@@ -94,7 +94,28 @@ func TestCreateReplicateUser(t *testing.T) {
 }
 
 func TestMySqlDataDump(t *testing.T) {
-	err := svc.MySqlDataDump(ctx)
+	err := svc.MySqlPosDataDump(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDownLoadPosDataFile(t *testing.T) {
+	err := svc.DownLoadPosDataFile(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCopyDumpDataToSlavea(t *testing.T) {
+	err := svc.CopyDumpDataToSlavea(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCopyDumpDataToSlaveb(t *testing.T) {
+	err := svc.CopyDumpDataToSlaveb(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}

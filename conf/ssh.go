@@ -90,6 +90,27 @@ func (m *Master) UploadFile(srcFile, dstFile string) (string, error) {
 	return fmt.Sprintf("上传本地文件[%s]成功!", srcFile), err
 }
 
+// 创建下载osw文件的方法
+func (s *Master) DownloadFile(srcFile, dstFile string) (string, error) {
+	sftpClient, err := s.CreateSftpConn()
+	if err != nil {
+		return "创建sftp连接失败!", err
+	}
+	src, err := sftpClient.Open(srcFile)
+	if err != nil {
+		return fmt.Sprintf("打开远程文件[%s]流失败!", srcFile), err
+	}
+	dst, err := os.Create(dstFile)
+	if err != nil {
+		return fmt.Sprintf("打开本地文件[%s]流失败!", dstFile), err
+	}
+	_, err = src.WriteTo(dst)
+	if err != nil {
+		return fmt.Sprintf("远程文件[%s]下载失败!", srcFile), err
+	}
+	return fmt.Sprintf("远程文件[%s]下载成功!", srcFile), err
+}
+
 // 创建SSH连接
 func (m *Slavea) CreateSSHConn() (*ssh.Client, error) {
 	config := ssh.ClientConfig{
