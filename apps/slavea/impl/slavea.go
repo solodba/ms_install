@@ -191,6 +191,12 @@ func (i *impl) ChangeMySQLDirPerm(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// 修改slavea节点server id
+	cmd = fmt.Sprintf(`sed -i 's/server-id = 6666/server-id = %d/' %s/my.cnf`, i.c.Slavea.ServerId, i.c.MySQL.ConfPath())
+	_, err = i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
 	return nil
 }
 

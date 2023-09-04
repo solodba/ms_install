@@ -43,6 +43,7 @@ type Master struct {
 	SysPassword string `toml:"sys_password" env:"MASTER_SYS_PASSWORD"`
 	SysHost     string `toml:"sys_host" env:"MASTER_SYS_HOST"`
 	SysPort     int64  `toml:"sys_port" env:"MASTER_SYS_PORT"`
+	ServerId    int64  `toml:"server_id" env:"MASTER_SERVER_ID"`
 }
 
 // Slavea结构体
@@ -51,6 +52,7 @@ type Slavea struct {
 	SysPassword string `toml:"sys_password" env:"SLAVEA_SYS_PASSWORD"`
 	SysHost     string `toml:"sys_host" env:"SLAVEA_SYS_HOST"`
 	SysPort     int64  `toml:"sys_port" env:"SLAVEA_SYS_PORT"`
+	ServerId    int64  `toml:"server_id" env:"SLAVEA_SERVER_ID"`
 }
 
 // Slaveb结构体
@@ -59,6 +61,7 @@ type Slaveb struct {
 	SysPassword string `toml:"sys_password" env:"SLAVEB_SYS_PASSWORD"`
 	SysHost     string `toml:"sys_host" env:"SLAVEB_SYS_HOST"`
 	SysPort     int64  `toml:"sys_port" env:"SLAVEB_SYS_PORT"`
+	ServerId    int64  `toml:"server_id" env:"SLAVEB_SERVER_ID"`
 }
 
 // Config构造函数
