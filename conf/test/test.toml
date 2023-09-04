@@ -11,6 +11,7 @@ backup_dir_name = "backup"
 root_password = "Root@123"
 repl_user = "repl"
 repl_password = "Root@123"
+install_mode = "ms"
 
 [master]
 sys_username = "root"

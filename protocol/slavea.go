@@ -1,6 +1,6 @@
 package protocol
 
-// Master安装程序
+// Slavea安装程序
 func (m *MsInstallSvc) SlaveaInstall() error {
 	err := m.slaveaSvc.StopFirewall(ctx)
 	if err != nil {
@@ -39,6 +39,23 @@ func (m *MsInstallSvc) SlaveaInstall() error {
 		return err
 	}
 	err = m.slaveaSvc.StartMySQL(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Slavea主从配置
+func (m *MsInstallSvc) MsSlaveaInstall() error {
+	err := m.slaveaSvc.CloseGtid(ctx)
+	if err != nil {
+		return err
+	}
+	err = m.slaveaSvc.ImportFullData(ctx)
+	if err != nil {
+		return err
+	}
+	err = m.slaveaSvc.SyncMasterData(ctx)
 	if err != nil {
 		return err
 	}

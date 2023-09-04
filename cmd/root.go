@@ -46,8 +46,6 @@ func LoadGlobalConfig(configType string) error {
 		if err := conf.LoadConfigFromEnv(); err != nil {
 			return err
 		}
-	case "etcd":
-		return fmt.Errorf("load global from etcd is not implement")
 	default:
 		return fmt.Errorf("this config type is not support")
 	}
