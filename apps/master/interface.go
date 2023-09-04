@@ -39,8 +39,8 @@ type Service interface {
 	MySqlPosDataDump(context.Context) error
 	// 下载全库导出文件
 	DownLoadPosDataFile(context.Context) error
-	// 数据拷贝到从库
+	// 数据拷贝到从库a
 	CopyDumpDataToSlavea(context.Context) error
-	// 数据拷贝到从库
+	// 数据拷贝到从库b
 	CopyDumpDataToSlaveb(context.Context) error
 }
