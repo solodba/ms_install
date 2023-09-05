@@ -318,6 +318,17 @@ func (i *impl) ImportFullData(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
 	}
+	switch i.c.MySQL.InstallType {
+	case "pos":
+	case "gtid":
+		cmd = fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e 'reset master'`, i.c.MySQL.RootPassword)
+		_, err = i.c.Slavea.RunShell(cmd)
+		if err != nil {
+			return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+		}
+	default:
+		return fmt.Errorf("该安装类型不支持! 目前支持类型: pos(基于位点复制), gtid(基于gtid复制)")
+	}
 	cmd = fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' < %s/alldb.sql`, i.c.MySQL.RootPassword, i.c.MySQL.BackupPath())
 	_, err = i.c.Slavea.RunShell(cmd)
 	if err != nil {
@@ -357,6 +368,18 @@ func (i *impl) SyncMasterData(ctx context.Context) error {
 	cmd := fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e "change master to master_user='%s',master_host='%s',master_password='%s',master_log_file='%s',master_log_pos=%d;start slave"`,
 		i.c.MySQL.RootPassword, i.c.MySQL.ReplUser, i.c.Master.SysHost, i.c.MySQL.ReplPassword, binLogFileNamePos.Name, binLogFileNamePos.Pos)
 	_, err = i.c.Slavea.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上同步主库[%s]数据命令执行成功", i.c.Slavea.SysHost, i.c.Master.SysHost)
+	return nil
+}
+
+// 从库配置GTID数据同步
+func (i *impl) SyncMasterGtidData(context.Context) error {
+	cmd := fmt.Sprintf(`source /etc/profile;mysql -u'root' -p'%s' -e "change master to master_user='%s',master_host='%s',master_password='%s',master_auto_position=1;start slave"`,
+		i.c.MySQL.RootPassword, i.c.MySQL.ReplUser, i.c.Master.SysHost, i.c.MySQL.ReplPassword)
+	_, err := i.c.Slavea.RunShell(cmd)
 	if err != nil {
 		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Slavea.SysHost, cmd, err.Error())
 	}

@@ -39,4 +39,6 @@ type Service interface {
 	GetBinLogFileNameAndPos(context.Context) (*BinLogFileNamePos, error)
 	// 从库配置同步
 	SyncMasterData(context.Context) error
+	// 从库配置GTID数据同步
+	SyncMasterGtidData(context.Context) error
 }

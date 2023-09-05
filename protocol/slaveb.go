@@ -1,5 +1,11 @@
 package protocol
 
+import (
+	"fmt"
+
+	"github.com/solodba/ms_install/conf"
+)
+
 // Slaveb安装程序
 func (m *MsInstallSvc) SlavebInstall() error {
 	err := m.slavebSvc.StopFirewall(ctx)
@@ -47,17 +53,33 @@ func (m *MsInstallSvc) SlavebInstall() error {
 
 // Slavea主从配置
 func (m *MsInstallSvc) MsSlavebInstall() error {
-	err := m.slavebSvc.CloseGtid(ctx)
-	if err != nil {
-		return err
-	}
-	err = m.slavebSvc.ImportFullData(ctx)
-	if err != nil {
-		return err
-	}
-	err = m.slavebSvc.SyncMasterData(ctx)
-	if err != nil {
-		return err
+	installType := conf.C().MySQL.InstallType
+	switch installType {
+	case "pos":
+		err := m.slavebSvc.CloseGtid(ctx)
+		if err != nil {
+			return err
+		}
+		err = m.slavebSvc.ImportFullData(ctx)
+		if err != nil {
+			return err
+		}
+		err = m.slavebSvc.SyncMasterData(ctx)
+		if err != nil {
+			return err
+		}
+	case "gtid":
+		err := m.slavebSvc.ImportFullData(ctx)
+		if err != nil {
+			return err
+		}
+		err = m.slavebSvc.SyncMasterGtidData(ctx)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("该安装类型不支持! 目前支持类型: pos(基于位点复制), gtid(基于gtid复制)")
+
 	}
 	return nil
 }

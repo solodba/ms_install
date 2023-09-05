@@ -1,5 +1,11 @@
 package protocol
 
+import (
+	"fmt"
+
+	"github.com/solodba/ms_install/conf"
+)
+
 // Slavea安装程序
 func (m *MsInstallSvc) SlaveaInstall() error {
 	err := m.slaveaSvc.StopFirewall(ctx)
@@ -47,17 +53,32 @@ func (m *MsInstallSvc) SlaveaInstall() error {
 
 // Slavea主从配置
 func (m *MsInstallSvc) MsSlaveaInstall() error {
-	err := m.slaveaSvc.CloseGtid(ctx)
-	if err != nil {
-		return err
-	}
-	err = m.slaveaSvc.ImportFullData(ctx)
-	if err != nil {
-		return err
-	}
-	err = m.slaveaSvc.SyncMasterData(ctx)
-	if err != nil {
-		return err
+	installType := conf.C().MySQL.InstallType
+	switch installType {
+	case "pos":
+		err := m.slaveaSvc.CloseGtid(ctx)
+		if err != nil {
+			return err
+		}
+		err = m.slaveaSvc.ImportFullData(ctx)
+		if err != nil {
+			return err
+		}
+		err = m.slaveaSvc.SyncMasterData(ctx)
+		if err != nil {
+			return err
+		}
+	case "gtid":
+		err := m.slaveaSvc.ImportFullData(ctx)
+		if err != nil {
+			return err
+		}
+		err = m.slaveaSvc.SyncMasterGtidData(ctx)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("该安装类型不支持! 目前支持类型: pos(基于位点复制), gtid(基于gtid复制)")
 	}
 	return nil
 }

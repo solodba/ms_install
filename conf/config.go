@@ -38,6 +38,7 @@ type MySQL struct {
 	ReplUser      string `toml:"repl_user" env:"MYSQL_REPL_USER"`
 	ReplPassword  string `toml:"repl_password" env:"MYSQL_REPL_PASSWORD"`
 	InstallMode   string `toml:"install_mode" env:"MYSQL_INSTALL_MODE"`
+	InstallType   string `toml:"install_type" env:"MYSQL_INSTALL_TYPE"`
 }
 
 // Master结构体

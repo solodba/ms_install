@@ -12,6 +12,7 @@ root_password = "Root@123"
 repl_user = "repl"
 repl_password = "Root@123"
 install_mode = "ms"
+install_type = "gtid"
 
 [master]
 sys_username = "root"

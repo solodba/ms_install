@@ -54,17 +54,35 @@ func (m *MsInstallSvc) MasterInstall() error {
 // Master上主从配置
 func (m *MsInstallSvc) MsMasterInstall() error {
 	mode := conf.C().MySQL.InstallMode
-	err := m.masterSvc.CloseGtid(ctx)
+	installType := conf.C().MySQL.InstallType
+	switch installType {
+	case "pos":
+		err := m.masterSvc.CloseGtid(ctx)
+		if err != nil {
+			return err
+		}
+	case "gtid":
+	default:
+		return fmt.Errorf("该安装类型不支持! 目前支持类型: pos(基于位点复制), gtid(基于gtid复制)")
+	}
+	err := m.masterSvc.CreateReplicateUser(ctx)
 	if err != nil {
 		return err
 	}
-	err = m.masterSvc.CreateReplicateUser(ctx)
-	if err != nil {
-		return err
-	}
-	err = m.masterSvc.MySqlPosDataDump(ctx)
-	if err != nil {
-		return err
+	switch installType {
+	case "pos":
+		err = m.masterSvc.MySqlPosDataDump(ctx)
+		if err != nil {
+			return err
+		}
+	case "gtid":
+		err = m.masterSvc.MySqlGtidDataDump(ctx)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("该安装类型不支持! 目前支持类型: pos(基于位点复制), gtid(基于gtid复制)")
+
 	}
 	err = m.masterSvc.DownLoadPosDataFile(ctx)
 	if err != nil {

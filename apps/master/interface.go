@@ -35,8 +35,10 @@ type Service interface {
 	CloseGtid(context.Context) error
 	// 创建复制用户
 	CreateReplicateUser(context.Context) error
-	// 数据导出
+	// 基于Position复制数据导出
 	MySqlPosDataDump(context.Context) error
+	// 基于GTID复制数据导出
+	MySqlGtidDataDump(context.Context) error
 	// 下载全库导出文件
 	DownLoadPosDataFile(context.Context) error
 	// 数据拷贝到从库a

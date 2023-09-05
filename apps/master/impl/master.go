@@ -327,9 +327,26 @@ func (i *impl) CreateReplicateUser(ctx context.Context) error {
 	return nil
 }
 
-// 数据导出
+// 基于Position复制数据导出
 func (i *impl) MySqlPosDataDump(ctx context.Context) error {
 	cmd := fmt.Sprintf(`source /etc/profile;mysqldump -u'root' -p'%s' --set-gtid-purged=off --single-transaction --master-data=2 --all-databases > %s/alldb.sql`,
+		i.c.MySQL.RootPassword, i.c.MySQL.BackupPath())
+	_, err := i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	cmd = fmt.Sprintf(`ls -l %s/alldb.sql`, i.c.MySQL.BackupPath())
+	_, err = i.c.Master.RunShell(cmd)
+	if err != nil {
+		return fmt.Errorf("[%s]主机上执行命令[%s]报错, 原因: %s", i.c.Master.SysHost, cmd, err.Error())
+	}
+	logger.L().Info().Msgf("[%s]主机上主库全库导出数据成功", i.c.Master.SysHost)
+	return nil
+}
+
+// 基于GTID复制数据导出
+func (i *impl) MySqlGtidDataDump(context.Context) error {
+	cmd := fmt.Sprintf(`source /etc/profile;mysqldump -u'root' -p'%s' --set-gtid-purged=on --single-transaction --master-data=2 --all-databases > %s/alldb.sql`,
 		i.c.MySQL.RootPassword, i.c.MySQL.BackupPath())
 	_, err := i.c.Master.RunShell(cmd)
 	if err != nil {
